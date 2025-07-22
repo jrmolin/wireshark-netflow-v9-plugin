@@ -52,6 +52,7 @@ netflow_globals = {
 
 function m.parse_record(template, buffer, index, set_length)
   local result = {
+    template_id = buffer(index, 2):uint(),
     length = 0,
     padding = 0,
     index = index,
@@ -96,9 +97,9 @@ function m.parse_record(template, buffer, index, set_length)
     result.fields[i] = field_obj
     i = i + 1
     so_far = so_far + template_field.length
+    result.length = so_far
 
   end
-  result.length = so_far
 
   return result
 
@@ -152,6 +153,8 @@ function m.parse_data(template, parent_tree, buffer, index)
       break
     else
       record_item = data:add(mongodb_protocol, buffer(record_obj.index, record_obj.length), "Record " .. record_index)
+      record_item:add(m.template_id, buffer(record_obj.index, 2))
+      record_item:add(m.set_length, buffer(record_obj.index+2, 2))
     end
 
     local field_index = 1
